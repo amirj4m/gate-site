@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CONTINUUM — Landing / Waitlist / Pre-order (single-file, zero-build)
+  ════════════════════════════════════════════════════════════════════════════
+
+  ── DEPLOY (pick one, all 1 command / 1 click) ────────────────────────────────
+  • Cloudflare Pages : push this folder to a Git repo → Pages → "Direct Upload"
+                       OR CLI:  npx wrangler pages deploy .
+  • Vercel           : run  `vercel`  in this folder (or drag-drop at vercel.com/new)
+  • GitHub Pages     : push to a repo → Settings → Pages → deploy from /(root)
+  This is a static site (no build step). Just serve index.html.
+
+  ── THE 3 THINGS YOU MUST FILL IN ─────────────────────────────────────────────
+  1) BRAND / DOMAIN  → edit the CONFIG object in the <script> near the bottom.
+                       Change BRAND to "Jamlex" and DOMAIN to "jamlex.app" if you
+                       switch. Everything (title, footer, emails) updates from there.
+  2) STRIPE_PAYMENT_LINK → in the same CONFIG object. Paste your Stripe Payment
+                       Link URL (https://buy.stripe.com/...). Until set, pre-order
+                       buttons stay visible but do nothing (safe).
+  3) WAITLIST_FORM_ENDPOINT → in CONFIG. Paste a Formspree/Getform POST URL.
+                       Formspree (free): create a form at formspree.io, copy the
+                       endpoint (https://formspree.io/f/XXXX). If left blank, the
+                       form falls back to opening the visitor's email client.
+
+  ── PERSIAN VARIANT ───────────────────────────────────────────────────────────
+  Copy this file to index.fa.html, translate the visible strings, set
+  <html lang="fa" dir="rtl">, and link the two versions. All layout is
+  flex/grid so RTL works with the dir attribute.
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0f" />
+
+  <!-- ── SEO / META ─────────────────────────────────────────────────────── -->
+  <title>Continuum — All your AI models. One memory. Private.</title>
+  <meta name="description" content="Chat with every major AI model — GPT, Gemini, DeepSeek — in one place, with a single private memory that follows you across all of them. No app store. Your data, yours." />
+  <link rel="canonical" href="https://gate.jamgate.dev/" />
+
+  <!-- ── Open Graph / Twitter ──────────────────────────────────────────── -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Continuum" />
+  <meta property="og:title" content="All your AI models. One memory. Private." />
+  <meta property="og:description" content="Every major AI model in one place, with one private memory that follows you everywhere. Stop juggling four subscriptions." />
+  <meta property="og:url" content="https://gate.jamgate.dev/" />
+  <!-- Replace with a real 1200x630 image before sharing widely -->
+  <meta property="og:image" content="https://gate.jamgate.dev/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="All your AI models. One memory. Private." />
+  <meta name="twitter:description" content="Every major AI model in one place, with one private memory that follows you everywhere." />
+  <meta name="twitter:image" content="https://gate.jamgate.dev/og-image.png" />
+
+  <!-- ── Favicon (inline SVG, no extra file needed) ────────────────────── -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0f'/%3E%3Ctext x='16' y='23.5' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='20' fill='url(%23g)'%3EC%3C/text%3E%3C/svg%3E" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Sora', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            ink: '#0a0a0f',
+            ink2: '#0f0f18',
+            accent: '#7c5cff',
+            accent2: '#22d3ee',
+          },
+          keyframes: {
+            floaty: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
+            fadeup: { '0%': { opacity: 0, transform: 'translateY(16px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+          },
+          animation: {
+            floaty: 'floaty 6s ease-in-out infinite',
+            fadeup: 'fadeup .7s ease-out both',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root { color-scheme: dark; }
+    body { background: #0a0a0f; }
+    .grad-text { background: linear-gradient(100deg,#a78bfa 0%,#7c5cff 40%,#22d3ee 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .grad-btn { background: linear-gradient(100deg,#7c5cff 0%,#22d3ee 100%); }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)); border: 1px solid rgba(255,255,255,.08); }
+    .card:hover { border-color: rgba(124,92,255,.45); transform: translateY(-4px); }
+    .glow { background: radial-gradient(600px circle at 50% 0%, rgba(124,92,255,.22), transparent 70%); }
+    .ring-soft { box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 20px 60px -20px rgba(124,92,255,.35); }
+    /* reveal-on-scroll */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    ::selection { background: rgba(124,92,255,.35); }
+    .noise:before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:22px 22px;opacity:.5;pointer-events:none;}
+  </style>
+</head>
+
+<body class="font-sans text-slate-200 antialiased selection:text-white">
+
+  <!-- ══ NAV ══════════════════════════════════════════════════════════════ -->
+  <header class="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-ink/70 border-b border-white/5">
+    <nav class="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+      <a href="#top" class="flex items-center gap-2 font-display font-bold text-lg text-white">
+        <span class="inline-grid place-items-center w-8 h-8 rounded-lg grad-btn text-ink font-extrabold">C</span>
+        <span data-brand>Continuum</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-sm text-slate-300">
+        <a href="#features" class="hover:text-white transition">Features</a>
+        <a href="#compare" class="hover:text-white transition">Why us</a>
+        <a href="#pricing" class="hover:text-white transition">Pricing</a>
+        <a href="#faq" class="hover:text-white transition">FAQ</a>
+      </div>
+      <a data-stripe href="#" class="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-white grad-btn px-4 py-2 rounded-lg hover:opacity-90 transition ring-soft">
+        Pre-order
+      </a>
+    </nav>
+  </header>
+
+  <!-- ══ HERO ═════════════════════════════════════════════════════════════ -->
+  <section id="top" class="relative overflow-hidden noise">
+    <div class="absolute inset-0 glow"></div>
+    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full blur-3xl opacity-20"
+         style="background:radial-gradient(circle,#7c5cff,transparent 60%)"></div>
+    <div class="relative max-w-6xl mx-auto px-5 pt-32 pb-20 md:pt-40 md:pb-28 text-center">
+      <div class="inline-flex items-center gap-2 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-7 animate-fadeup">
+        <span class="w-2 h-2 rounded-full bg-accent2 animate-pulse"></span>
+        Founding access is open — be one of the first 100
+      </div>
+      <h1 class="font-display font-extrabold tracking-tight text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white animate-fadeup">
+        All your AI models.<br />
+        <span class="grad-text">One memory.</span> Private.
+      </h1>
+      <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-slate-300 animate-fadeup" style="animation-delay:.08s">
+        Chat with GPT, Gemini, DeepSeek and more in one place — with a single private memory
+        that follows you across every model. Stop juggling four subscriptions and a dozen tabs.
+      </p>
+      <div class="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fadeup" style="animation-delay:.16s">
+        <a data-stripe href="#" class="w-full sm:w-auto grad-btn text-ink font-bold px-7 py-3.5 rounded-xl text-base hover:opacity-90 transition ring-soft">
+          Pre-order early access →
+        </a>
+        <a href="#waitlist" class="w-full sm:w-auto text-white font-semibold px-7 py-3.5 rounded-xl text-base border border-white/15 hover:bg-white/5 transition">
+          Join the waitlist
+        </a>
+      </div>
+      <p class="mt-5 text-sm text-slate-400 animate-fadeup" style="animation-delay:.24s">
+        Founding price · Lifetime early-adopter rate · Cancel anytime before launch, full refund
+      </p>
+
+      <!-- Model badges -->
+      <div class="mt-14 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 opacity-80 animate-fadeup" style="animation-delay:.3s">
+        <span class="text-xs uppercase tracking-widest text-slate-500">One chat, every model</span>
+        <div class="flex flex-wrap items-center justify-center gap-3 text-sm font-semibold text-slate-300">
+          <span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10">GPT</span>
+            <span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10">Gemini</span>
+          <span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10">DeepSeek</span>
+          <span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10">Llama</span>
+          <span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10">+ more</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PROBLEM ══════════════════════════════════════════════════════════ -->
+  <section class="max-w-5xl mx-auto px-5 py-20 md:py-28">
+    <div class="reveal text-center max-w-3xl mx-auto">
+      <p class="text-sm font-semibold uppercase tracking-widest text-accent2">The problem</p>
+      <h2 class="mt-3 font-display font-bold text-3xl md:text-4xl text-white leading-tight">
+        Four apps. Four subscriptions. Zero memory of who you are.
+      </h2>
+      <p class="mt-5 text-lg text-slate-300">
+        You open ChatGPT for one thing, Gemini for another, DeepSeek for a third. You pay for
+        several. And every single one forgets everything the moment you switch — you re-explain
+        your project, your preferences, your context, over and over.
+      </p>
+    </div>
+    <div class="reveal mt-12 grid sm:grid-cols-3 gap-4">
+      <div class="card rounded-2xl p-6 transition">
+        <div class="text-3xl">🗂️</div>
+        <h3 class="mt-3 font-semibold text-white">Tab & app sprawl</h3>
+        <p class="mt-2 text-sm text-slate-400">Copy-pasting between models to find the best answer wastes your time.</p>
+      </div>
+      <div class="card rounded-2xl p-6 transition">
+        <div class="text-3xl">💸</div>
+        <h3 class="mt-3 font-semibold text-white">Paying multiple times</h3>
+        <p class="mt-2 text-sm text-slate-400">$20 here, $20 there — you're funding three or four labs at once.</p>
+      </div>
+      <div class="card rounded-2xl p-6 transition">
+        <div class="text-3xl">🧠</div>
+        <h3 class="mt-3 font-semibold text-white">Nobody remembers you</h3>
+        <p class="mt-2 text-sm text-slate-400">Each model's memory is siloed. Switch models and you start from scratch.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FEATURES ═════════════════════════════════════════════════════════ -->
+  <section id="features" class="relative max-w-6xl mx-auto px-5 py-20 md:py-28">
+    <div class="reveal text-center max-w-3xl mx-auto">
+      <p class="text-sm font-semibold uppercase tracking-widest text-accent2">How it works</p>
+      <h2 class="mt-3 font-display font-bold text-3xl md:text-4xl text-white leading-tight">
+        One place. One memory. Every model.
+      </h2>
+    </div>
+
+    <div class="reveal mt-14 grid md:grid-cols-2 gap-5">
+      <!-- Feature 1 -->
+      <div class="card rounded-3xl p-8 transition">
+        <div class="w-12 h-12 grid place-items-center rounded-xl grad-btn text-ink text-2xl">💬</div>
+        <h3 class="mt-5 font-display font-bold text-xl text-white">All models in one chat</h3>
+        <p class="mt-2 text-slate-300">GPT, Gemini, DeepSeek and more — side by side. Ask once, or route the same question to several models and compare.</p>
+      </div>
+      <!-- Feature 2 — the differentiator -->
+      <div class="card rounded-3xl p-8 transition relative overflow-hidden">
+        <div class="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider text-ink grad-btn px-2 py-1 rounded-full">The difference</div>
+        <div class="w-12 h-12 grid place-items-center rounded-xl grad-btn text-ink text-2xl">🧠</div>
+        <h3 class="mt-5 font-display font-bold text-xl text-white">One shared memory across every model</h3>
+        <p class="mt-2 text-slate-300">A single, neutral memory carries your context, preferences and project history between models. Switch mid-conversation and it still knows you.</p>
+      </div>
+      <!-- Feature 3 -->
+      <div class="card rounded-3xl p-8 transition">
+        <div class="w-12 h-12 grid place-items-center rounded-xl grad-btn text-ink text-2xl">🔒</div>
+        <h3 class="mt-5 font-display font-bold text-xl text-white">Private &amp; user-owned</h3>
+        <p class="mt-2 text-slate-300">Your memory belongs to you — quality-gated, not mined for ads or training. Export it or delete it anytime.</p>
+      </div>
+      <!-- Feature 4 -->
+      <div class="card rounded-3xl p-8 transition">
+        <div class="w-12 h-12 grid place-items-center rounded-xl grad-btn text-ink text-2xl">⚡</div>
+        <h3 class="mt-5 font-display font-bold text-xl text-white">Best model for each task</h3>
+        <p class="mt-2 text-slate-300">Reasoning, coding, writing, images — pick the right model per job and switch instantly. Installs as a PWA, no app store.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ COMPARISON ═══════════════════════════════════════════════════════ -->
+  <section id="compare" class="max-w-5xl mx-auto px-5 py-20 md:py-28">
+    <div class="reveal text-center max-w-3xl mx-auto">
+      <p class="text-sm font-semibold uppercase tracking-widest text-accent2">Why us vs. the rest</p>
+      <h2 class="mt-3 font-display font-bold text-3xl md:text-4xl text-white leading-tight">
+        Aggregators give you models. We give you memory.
+      </h2>
+      <p class="mt-4 text-slate-400">Honest comparison. Plenty of tools bundle models — almost none carry a single private memory across them.</p>
+    </div>
+
+    <div class="reveal mt-12 overflow-x-auto">
+      <table class="w-full min-w-[560px] text-left border-collapse">
+        <thead>
+          <tr class="text-sm">
+            <th class="p-4 font-medium text-slate-400"></th>
+            <th class="p-4 text-center rounded-t-xl grad-btn text-ink font-bold" data-brand-cell>Continuum</th>
+            <th class="p-4 text-center font-semibold text-slate-300">Single-model apps</th>
+            <th class="p-4 text-center font-semibold text-slate-300">Aggregators<br/><span class="font-normal text-xs text-slate-500">(no memory)</span></th>
+          </tr>
+        </thead>
+        <tbody class="text-sm">
+          <tr class="border-t border-white/8">
+            <td class="p-4 text-slate-300">All major models in one place</td>
+            <td class="p-4 text-center bg-white/[.03] text-accent2 font-bold">✓</td>
+            <td class="p-4 text-center text-slate-500">✗</td>
+            <td class="p-4 text-center text-accent2">✓</td>
+          </tr>
+          <tr class="border-t border-white/8">
+            <td class="p-4 text-slate-300">One memory across <em>every</em> model</td>
+            <td class="p-4 text-center bg-white/[.03] text-accent2 font-bold">✓</td>
+            <td class="p-4 text-center text-slate-500">✗</td>
+            <td class="p-4 text-center text-slate-500">✗</td>
+          </tr>
+          <tr class="border-t border-white/8">
+            <td class="p-4 text-slate-300">Private, user-owned data (not mined)</td>
+            <td class="p-4 text-center bg-white/[.03] text-accent2 font-bold">✓</td>
+            <td class="p-4 text-center text-slate-500">Varies</td>
+            <td class="p-4 text-center text-slate-500">Varies</td>
+          </tr>
+          <tr class="border-t border-white/8">
+            <td class="p-4 text-slate-300">One subscription, not four</td>
+            <td class="p-4 text-center bg-white/[.03] text-accent2 font-bold">✓</td>
+            <td class="p-4 text-center text-slate-500">✗</td>
+            <td class="p-4 text-center text-accent2">✓</td>
+          </tr>
+          <tr class="border-t border-white/8">
+            <td class="p-4 text-slate-300">Installable in the browser (PWA)</td>
+            <td class="p-4 text-center bg-white/[.03] text-accent2 font-bold rounded-b-xl">✓</td>
+            <td class="p-4 text-center text-slate-500">Varies</td>
+            <td class="p-4 text-center text-slate-500">Varies</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ PRICING ══════════════════════════════════════════════════════════ -->
+  <section id="pricing" class="relative max-w-5xl mx-auto px-5 py-20 md:py-28">
+    <div class="reveal text-center max-w-3xl mx-auto">
+      <p class="text-sm font-semibold uppercase tracking-widest text-accent2">Founding offer</p>
+      <h2 class="mt-3 font-display font-bold text-3xl md:text-4xl text-white leading-tight">
+        Lock the founding price before launch
+      </h2>
+      <p class="mt-4 text-slate-400">Limited to the first 100 members. Replaces multiple AI subscriptions with one.</p>
+    </div>
+
+    <div class="reveal mt-12 max-w-md mx-auto">
+      <div class="rounded-3xl p-8 md:p-10 card ring-soft relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl opacity-30" style="background:radial-gradient(circle,#22d3ee,transparent 60%)"></div>
+        <div class="relative">
+          <div class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink grad-btn px-3 py-1 rounded-full">Founding member</div>
+          <div class="mt-6 flex items-end gap-2">
+            <span class="font-display font-extrabold text-5xl text-white" data-price>$29</span>
+            <span class="text-slate-400 mb-1.5">one-time pre-order</span>
+          </div>
+          <p class="mt-2 text-sm text-slate-400">Then a discounted founding rate at launch — locked for life. <span class="line-through">$60+/mo across separate apps</span></p>
+
+          <ul class="mt-7 space-y-3 text-sm">
+            <li class="flex gap-3 text-slate-200"><span class="text-accent2">✓</span> Early access before public launch</li>
+            <li class="flex gap-3 text-slate-200"><span class="text-accent2">✓</span> All major models in one place</li>
+            <li class="flex gap-3 text-slate-200"><span class="text-accent2">✓</span> One private memory across every model</li>
+            <li class="flex gap-3 text-slate-200"><span class="text-accent2">✓</span> Lifetime founding price — never goes up</li>
+            <li class="flex gap-3 text-slate-200"><span class="text-accent2">✓</span> Full refund anytime before launch</li>
+          </ul>
+
+          <a data-stripe href="#" class="mt-8 block text-center grad-btn text-ink font-bold px-7 py-3.5 rounded-xl text-base hover:opacity-90 transition ring-soft">
+            Pre-order early access →
+          </a>
+          <p class="mt-3 text-center text-xs text-slate-500">Secure checkout via Stripe · No spam · Cancel anytime</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ WAITLIST ═════════════════════════════════════════════════════════ -->
+  <section id="waitlist" class="max-w-3xl mx-auto px-5 py-20 md:py-28">
+    <div class="reveal card rounded-3xl p-8 md:p-12 text-center ring-soft">
+      <h2 class="font-display font-bold text-3xl md:text-4xl text-white">Not ready to pre-order? Join the waitlist.</h2>
+      <p class="mt-4 text-slate-300">Get early access and the founding price when we open more spots. No spam — just a launch heads-up.</p>
+
+      <form id="waitlist-form" class="mt-8 flex flex-col sm:flex-row gap-3 max-w-md mx-auto" novalidate>
+        <input
+          type="email" name="email" required autocomplete="email"
+          placeholder="you@example.com"
+          class="flex-1 px-4 py-3.5 rounded-xl bg-white/5 border border-white/12 text-white placeholder-slate-500 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition" />
+        <button type="submit"
+          class="grad-btn text-ink font-bold px-6 py-3.5 rounded-xl hover:opacity-90 transition whitespace-nowrap">
+          Join waitlist
+        </button>
+      </form>
+      <p id="waitlist-msg" class="mt-4 text-sm h-5" aria-live="polite"></p>
+      <p class="text-xs text-slate-500">We'll only email you about early access &amp; launch. Unsubscribe anytime.</p>
+    </div>
+  </section>
+
+  <!-- ══ FAQ ══════════════════════════════════════════════════════════════ -->
+  <section id="faq" class="max-w-3xl mx-auto px-5 py-20 md:py-28">
+    <div class="reveal text-center">
+      <p class="text-sm font-semibold uppercase tracking-widest text-accent2">FAQ</p>
+      <h2 class="mt-3 font-display font-bold text-3xl md:text-4xl text-white">Questions, answered</h2>
+    </div>
+
+    <div class="reveal mt-10 divide-y divide-white/8 border-y border-white/8">
+      <details class="group py-5">
+        <summary class="flex justify-between items-center cursor-pointer list-none font-semibold text-white">
+          Is my data safe? Who owns my memory?
+          <span class="text-accent2 transition group-open:rotate-45 text-xl">+</span>
+        </summary>
+        <p class="mt-3 text-slate-300 text-sm leading-relaxed">You do. Your memory is user-owned and private — it's used to make your answers better, never sold or mined for ads. It's quality-gated for accuracy, and you can export or permanently delete it at any time.</p>
+      </details>
+      <details class="group py-5">
+        <summary class="flex justify-between items-center cursor-pointer list-none font-semibold text-white">
+          Which AI models are included?
+          <span class="text-accent2 transition group-open:rotate-45 text-xl">+</span>
+        </summary>
+        <p class="mt-3 text-slate-300 text-sm leading-relaxed">The major ones — GPT, Gemini, DeepSeek, Llama and more — all in one chat. We add new models as they launch, so your access grows over time at no extra cost.</p>
+      </details>
+      <details class="group py-5">
+        <summary class="flex justify-between items-center cursor-pointer list-none font-semibold text-white">
+          When does it launch?
+          <span class="text-accent2 transition group-open:rotate-45 text-xl">+</span>
+        </summary>
+        <p class="mt-3 text-slate-300 text-sm leading-relaxed">We're onboarding founding members first, in waves. Pre-order or join the waitlist and you'll get early access ahead of the public launch, with plenty of notice.</p>
+      </details>
+      <details class="group py-5">
+        <summary class="flex justify-between items-center cursor-pointer list-none font-semibold text-white">
+          Can I get a refund on my pre-order?
+          <span class="text-accent2 transition group-open:rotate-45 text-xl">+</span>
+        </summary>
+        <p class="mt-3 text-slate-300 text-sm leading-relaxed">Yes — full refund, no questions asked, anytime before you're onboarded at launch. The pre-order simply reserves your spot and your founding price.</p>
+      </details>
+      <details class="group py-5">
+        <summary class="flex justify-between items-center cursor-pointer list-none font-semibold text-white">
+          Is it a subscription?
+          <span class="text-accent2 transition group-open:rotate-45 text-xl">+</span>
+        </summary>
+        <p class="mt-3 text-slate-300 text-sm leading-relaxed">The pre-order is a one-time payment to reserve founding access. At launch you'll continue on a discounted founding rate that's locked for life — far less than paying several model subscriptions separately.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ══ FINAL CTA ════════════════════════════════════════════════════════ -->
+  <section class="max-w-5xl mx-auto px-5 pb-24">
+    <div class="reveal rounded-3xl p-10 md:p-14 text-center relative overflow-hidden ring-soft"
+         style="background:linear-gradient(120deg,rgba(124,92,255,.18),rgba(34,211,238,.12))">
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl text-white leading-tight">One AI. That actually remembers you.</h2>
+      <p class="mt-4 text-slate-200 max-w-xl mx-auto">Join the first 100 founding members and lock your price before launch.</p>
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a data-stripe href="#" class="w-full sm:w-auto grad-btn text-ink font-bold px-8 py-3.5 rounded-xl hover:opacity-90 transition ring-soft">Pre-order early access →</a>
+        <a href="#waitlist" class="w-full sm:w-auto text-white font-semibold px-8 py-3.5 rounded-xl border border-white/20 hover:bg-white/10 transition">Join the waitlist</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ═══════════════════════════════════════════════════════════ -->
+  <footer class="border-t border-white/8">
+    <div class="max-w-6xl mx-auto px-5 py-12 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-slate-400">
+      <div class="flex items-center gap-2 font-display font-bold text-white">
+        <span class="inline-grid place-items-center w-7 h-7 rounded-lg grad-btn text-ink font-extrabold text-sm">C</span>
+        <span data-brand>Continuum</span>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        <a href="privacy.html" class="hover:text-white transition">Privacy</a>
+        <a href="terms.html" class="hover:text-white transition">Terms</a>
+        <a data-contact href="#" class="hover:text-white transition">Contact</a>
+        <a data-twitter href="#" class="hover:text-white transition">X / Twitter</a>
+      </div>
+      <div class="text-slate-500">© <span id="year"></span> <span data-brand>Continuum</span>. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       CONFIG + LOGIC  —  edit the CONFIG object below. That's the only place.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <script>
+    /* ╔══════════════════════════════════════════════════════════════════╗
+       ║  ⚙️  CONFIG — change these values, nothing else.                  ║
+       ╚══════════════════════════════════════════════════════════════════╝ */
+    const CONFIG = {
+      BRAND: "Continuum",                 // e.g. "Jamlex"
+      DOMAIN: "gate.jamgate.dev",            // e.g. "jamlex.app"
+
+      // Paste your Stripe Payment Link (https://buy.stripe.com/...).
+      // Leave "" and buttons stay visible but inert (safe until you're ready).
+      STRIPE_PAYMENT_LINK: "",
+
+      // Paste your Formspree/Getform endpoint (https://formspree.io/f/XXXX).
+      // Leave "" to fall back to opening the visitor's email client.
+      WAITLIST_FORM_ENDPOINT: "",
+
+      // Contact + social (optional). Contact falls back to hello@DOMAIN.
+      CONTACT_EMAIL: "amirj4m@gmail.com",               // e.g. "hello@jamgate.dev"
+      TWITTER_URL: "",                 // e.g. "https://x.com/continuum"
+
+      PRICE: "$29",                    // pre-order price shown on the pricing card
+    };
+
+    /* ── Apply brand everywhere ──────────────────────────────────────── */
+    document.querySelectorAll('[data-brand]').forEach(el => el.textContent = CONFIG.BRAND);
+    document.querySelector('[data-brand-cell]').firstChild.textContent = CONFIG.BRAND;
+    document.querySelectorAll('[data-price]').forEach(el => el.textContent = CONFIG.PRICE);
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ── Wire pre-order (Stripe) buttons ─────────────────────────────── */
+    document.querySelectorAll('[data-stripe]').forEach(btn => {
+      if (CONFIG.STRIPE_PAYMENT_LINK) {
+        btn.href = CONFIG.STRIPE_PAYMENT_LINK;
+        btn.setAttribute('rel', 'noopener');
+      } else {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const msg = document.getElementById('waitlist-msg');
+          // Nudge inert pre-order clicks toward the waitlist until Stripe is set.
+          document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' });
+          if (msg) { msg.textContent = "Pre-orders open soon — join the waitlist to be first."; msg.className = "mt-4 text-sm h-5 text-accent2"; }
+        });
+      }
+    });
+
+    /* ── Contact + social links ──────────────────────────────────────── */
+    const contactEmail = CONFIG.CONTACT_EMAIL || ("hello@" + CONFIG.DOMAIN);
+    document.querySelectorAll('[data-contact]').forEach(a => a.href = "mailto:" + contactEmail);
+    document.querySelectorAll('[data-twitter]').forEach(a => {
+      if (CONFIG.TWITTER_URL) { a.href = CONFIG.TWITTER_URL; a.target = "_blank"; a.rel = "noopener"; }
+      else a.style.display = "none";
+    });
+
+    /* ── Waitlist form ───────────────────────────────────────────────── */
+    const form = document.getElementById('waitlist-form');
+    const msg = document.getElementById('waitlist-msg');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = form.email.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = "Please enter a valid email.";
+        msg.className = "mt-4 text-sm h-5 text-red-400";
+        return;
+      }
+      const setOk = () => { msg.textContent = "You're on the list — check your inbox. 🎉"; msg.className = "mt-4 text-sm h-5 text-accent2"; form.reset(); };
+
+      if (!CONFIG.WAITLIST_FORM_ENDPOINT) {
+        // Fallback: open the visitor's email client to the founder.
+        window.location.href = "mailto:" + contactEmail + "?subject=" + encodeURIComponent("Waitlist: " + CONFIG.BRAND) + "&body=" + encodeURIComponent("Please add me to the waitlist: " + email);
+        setOk();
+        return;
+      }
+      try {
+        msg.textContent = "Adding you…"; msg.className = "mt-4 text-sm h-5 text-slate-400";
+        const res = await fetch(CONFIG.WAITLIST_FORM_ENDPOINT, {
+          method: "POST",
+          headers: { "Accept": "application/json" },
+          body: new FormData(form),
+        });
+        if (res.ok) setOk();
+        else { msg.textContent = "Something went wrong — try again."; msg.className = "mt-4 text-sm h-5 text-red-400"; }
+      } catch {
+        msg.textContent = "Network error — try again."; msg.className = "mt-4 text-sm h-5 text-red-400";
+      }
+    });
+
+    /* ── Reveal-on-scroll ────────────────────────────────────────────── */
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
+</body>
+</html>

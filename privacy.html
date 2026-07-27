@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<!-- Minimal privacy policy stub. Review with a lawyer before taking real payments.
+     Brand/domain/contact are set in the CONFIG block at the bottom. -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>Privacy Policy — Continuum</title>
+  <meta name="robots" content="all" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0f'/%3E%3Cpath d='M11 23V9h6.2c3 0 4.8 1.7 4.8 4.4S20.2 18 17.2 18H14v5z' fill='%237c5cff'/%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet" />
+  <style>body{background:#0a0a0f}.grad{background:linear-gradient(100deg,#7c5cff,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}</style>
+</head>
+<body class="text-slate-300 antialiased" style="font-family:Inter,system-ui,sans-serif">
+  <div class="max-w-2xl mx-auto px-5 py-16">
+    <a href="index.html" class="text-sm text-slate-400 hover:text-white">← Back to <span data-brand>Continuum</span></a>
+    <h1 class="mt-6 font-bold text-4xl text-white" style="font-family:Sora,sans-serif">Privacy <span class="grad">Policy</span></h1>
+    <p class="mt-2 text-sm text-slate-500">Last updated: <span id="date"></span></p>
+
+    <div class="mt-8 space-y-6 leading-relaxed">
+      <p>This policy explains what <span data-brand>Continuum</span> ("we", "us") collects and how we use it. We built this product around a simple principle: <strong class="text-white">your memory and your conversations belong to you.</strong></p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">What we collect</h2>
+      <p>At this pre-launch stage we collect only: (1) your email address, if you join the waitlist or pre-order, and (2) payment information processed securely by our payment provider (Stripe) — we never see or store your full card details. When the product launches, we will also store the conversations and memory you choose to save.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">How we use it</h2>
+      <p>We use your email to send you early-access and launch updates, and to deliver what you pre-ordered. We use your saved memory only to improve your own answers across models. <strong class="text-white">We do not sell your data, and we do not mine your conversations for advertising.</strong></p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Your rights</h2>
+      <p>You can request a copy of your data, correct it, or ask us to delete it permanently at any time. You can unsubscribe from emails using the link in any message, or by contacting us.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Third parties</h2>
+      <p>We rely on a small number of trusted processors — payments (Stripe), email/form handling, and hosting. Each processes data only to provide their service to us. The AI model providers you choose to use process the prompts you send to them under their own terms.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Contact</h2>
+      <p>Questions or data requests: <a data-contact href="#" class="grad font-semibold">email us</a>.</p>
+
+      <p class="text-sm text-slate-500 pt-4">This is a starting template, not legal advice. Have it reviewed before relying on it for real transactions.</p>
+    </div>
+  </div>
+  <script>
+    // Keep in sync with index.html CONFIG
+    const CONFIG = { BRAND: "Continuum", DOMAIN: "gate.jamgate.dev", CONTACT_EMAIL: "amirj4m@gmail.com" };
+    document.querySelectorAll('[data-brand]').forEach(el => el.textContent = CONFIG.BRAND);
+    document.title = "Privacy Policy — " + CONFIG.BRAND;
+    const email = CONFIG.CONTACT_EMAIL || ("hello@" + CONFIG.DOMAIN);
+    document.querySelectorAll('[data-contact]').forEach(a => a.href = "mailto:" + email);
+    document.getElementById('date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  </script>
+</body>
+</html>

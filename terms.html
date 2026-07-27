@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<!-- Minimal terms of service stub. Review with a lawyer before taking real payments.
+     Brand/domain/contact are set in the CONFIG block at the bottom. -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>Terms of Service — Continuum</title>
+  <meta name="robots" content="all" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0f'/%3E%3Cpath d='M11 23V9h6.2c3 0 4.8 1.7 4.8 4.4S20.2 18 17.2 18H14v5z' fill='%237c5cff'/%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet" />
+  <style>body{background:#0a0a0f}.grad{background:linear-gradient(100deg,#7c5cff,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}</style>
+</head>
+<body class="text-slate-300 antialiased" style="font-family:Inter,system-ui,sans-serif">
+  <div class="max-w-2xl mx-auto px-5 py-16">
+    <a href="index.html" class="text-sm text-slate-400 hover:text-white">← Back to <span data-brand>Continuum</span></a>
+    <h1 class="mt-6 font-bold text-4xl text-white" style="font-family:Sora,sans-serif">Terms of <span class="grad">Service</span></h1>
+    <p class="mt-2 text-sm text-slate-500">Last updated: <span id="date"></span></p>
+
+    <div class="mt-8 space-y-6 leading-relaxed">
+      <p>These terms govern your use of <span data-brand>Continuum</span> and any pre-order you place. By using the site or pre-ordering, you agree to them.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Pre-orders &amp; refunds</h2>
+      <p>A pre-order is a one-time payment that reserves your founding access and founding price. The product is in development; timelines are estimates and may change. <strong class="text-white">You may request a full refund at any time before you are onboarded at launch</strong> — just contact us.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">The service</h2>
+      <p><span data-brand>Continuum</span> provides access to third-party AI models through a single interface with shared memory. Availability of specific models may change as providers update their offerings. We aim for high reliability but do not guarantee uninterrupted service.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Acceptable use</h2>
+      <p>You agree not to use the service for unlawful purposes, to abuse the underlying model providers, or to attempt to disrupt or reverse-engineer the service. You are responsible for the content of the prompts you submit.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Your content &amp; memory</h2>
+      <p>You retain ownership of your conversations and memory. You grant us only the limited permission needed to operate the service for you. See our <a href="privacy.html" class="grad font-semibold">Privacy Policy</a> for details.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Liability</h2>
+      <p>The service is provided "as is." To the extent permitted by law, our liability is limited to the amount you paid us. AI outputs may be inaccurate — verify important information independently.</p>
+
+      <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Contact</h2>
+      <p>Questions about these terms: <a data-contact href="#" class="grad font-semibold">email us</a>.</p>
+
+      <p class="text-sm text-slate-500 pt-4">This is a starting template, not legal advice. Have it reviewed before relying on it for real transactions.</p>
+    </div>
+  </div>
+  <script>
+    const CONFIG = { BRAND: "Continuum", DOMAIN: "gate.jamgate.dev", CONTACT_EMAIL: "amirj4m@gmail.com" };
+    document.querySelectorAll('[data-brand]').forEach(el => el.textContent = CONFIG.BRAND);
+    document.title = "Terms of Service — " + CONFIG.BRAND;
+    const email = CONFIG.CONTACT_EMAIL || ("hello@" + CONFIG.DOMAIN);
+    document.querySelectorAll('[data-contact]').forEach(a => a.href = "mailto:" + email);
+    document.getElementById('date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  </script>
+</body>
+</html>
