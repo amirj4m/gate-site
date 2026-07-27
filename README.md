@@ -1,2 +1,2 @@
 # gate-site
-Continuum validation landing page — served at gate.jamgate.dev
+Gate validation landing page — served at gate.jamgate.dev
