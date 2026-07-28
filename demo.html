@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  GATE — Interactive product demo (scripted / simulated, zero-backend)
+  ════════════════════════════════════════════════════════════════════════════
+  • 100% client-side. NO API keys, NO network calls to any model provider.
+  • Responses are canned but realistic. The "memory" is an in-page JS object
+    (no localStorage / no external storage) that persists across model switches
+    to demonstrate Gate's cross-model shared-memory moat.
+  • Reuses index.html's design system (Inter/Sora, ink/accent palette, grad-*).
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>Gate — Live demo · one memory across every model</title>
+  <meta name="description" content="Try Gate: chat with GPT, Claude, Gemini and DeepSeek in one place, switch models mid-conversation, and watch a single private memory follow you across all of them." />
+  <meta name="robots" content="all" />
+  <link rel="canonical" href="https://gate.jamgate.dev/demo.html" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Gate" />
+  <meta property="og:title" content="Gate — Live demo" />
+  <meta property="og:description" content="Switch models mid-conversation and watch one private memory follow you across GPT, Claude, Gemini and DeepSeek." />
+  <meta property="og:url" content="https://gate.jamgate.dev/demo.html" />
+  <meta property="og:image" content="https://gate.jamgate.dev/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gate — Live demo" />
+  <meta name="twitter:description" content="One private memory that follows you across every AI model. Try it." />
+  <meta name="twitter:image" content="https://gate.jamgate.dev/og-image.png" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0f'/%3E%3Ctext x='16' y='23.5' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='20' fill='url(%23g)'%3EG%3C/text%3E%3C/svg%3E" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        fontFamily: { sans: ['Inter','system-ui','sans-serif'], display: ['Sora','Inter','sans-serif'] },
+        colors: { ink:'#0a0a0f', ink2:'#0f0f18', accent:'#7c5cff', accent2:'#22d3ee' },
+        keyframes: {
+          fadeup: { '0%':{opacity:0,transform:'translateY(10px)'}, '100%':{opacity:1,transform:'translateY(0)'} },
+          pop:    { '0%':{opacity:0,transform:'translateY(6px) scale(.98)'}, '100%':{opacity:1,transform:'none'} },
+          pulseglow: { '0%,100%':{boxShadow:'0 0 0 0 rgba(34,211,238,.0)'}, '50%':{boxShadow:'0 0 0 6px rgba(34,211,238,.18)'} },
+        },
+        animation: { fadeup:'fadeup .5s ease-out both', pop:'pop .35s ease-out both', pulseglow:'pulseglow 1.4s ease-in-out 2' },
+      } },
+    };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    body { background:#0a0a0f; }
+    .grad-text { background:linear-gradient(100deg,#a78bfa 0%,#7c5cff 40%,#22d3ee 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .grad-btn { background:linear-gradient(100deg,#7c5cff 0%,#22d3ee 100%); }
+    .card { background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)); border:1px solid rgba(255,255,255,.08); }
+    .ring-soft { box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 20px 60px -20px rgba(124,92,255,.35); }
+    ::selection { background:rgba(124,92,255,.35); }
+    .chat-scroll{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.15) transparent; }
+    .chat-scroll::-webkit-scrollbar{ width:8px; }
+    .chat-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.14); border-radius:8px; }
+    /* typing dots */
+    .dot{ width:6px;height:6px;border-radius:50%;background:#94a3b8;display:inline-block;animation:blink 1.2s infinite both; }
+    .dot:nth-child(2){ animation-delay:.2s } .dot:nth-child(3){ animation-delay:.4s }
+    @keyframes blink{ 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+    .mem-new{ animation:pop .35s ease-out both, pulseglow 1.4s ease-in-out 2; }
+  </style>
+</head>
+
+<body class="font-sans text-slate-200 antialiased">
+
+  <!-- ══ TOP BAR ═══════════════════════════════════════════════════════════ -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-ink/70 border-b border-white/5">
+    <div class="max-w-6xl mx-auto px-4 sm:px-5 h-14 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2 font-display font-bold text-white">
+        <span class="inline-grid place-items-center w-8 h-8 rounded-lg grad-btn text-ink font-extrabold">G</span>
+        <span>Gate</span>
+        <span class="ml-1 text-[10px] font-bold uppercase tracking-wider text-accent2 border border-accent2/40 rounded-full px-2 py-0.5">Live demo</span>
+      </a>
+      <div class="flex items-center gap-2 sm:gap-3">
+        <a href="index.html" class="text-sm text-slate-300 hover:text-white transition hidden sm:inline">← Back to site</a>
+        <a data-stripe href="index.html#pricing" class="text-sm font-semibold text-ink grad-btn px-3.5 py-2 rounded-lg hover:opacity-90 transition ring-soft">Pre-order</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ INTRO ═════════════════════════════════════════════════════════════ -->
+  <section class="max-w-6xl mx-auto px-4 sm:px-5 pt-8 md:pt-10 text-center">
+    <div class="inline-flex items-center gap-2 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-5">
+      <span class="w-2 h-2 rounded-full bg-accent2 animate-pulse"></span>
+      Simulated demo — no real API calls, nothing is stored
+    </div>
+    <h1 class="font-display font-extrabold tracking-tight text-3xl sm:text-5xl leading-[1.08] text-white">
+      Switch models mid-chat.<br /><span class="grad-text">One memory follows you.</span>
+    </h1>
+    <p class="mt-4 max-w-2xl mx-auto text-slate-300">
+      Tell one model something, switch to another, and watch it already know. That shared,
+      private memory is what Gate delivers — and no aggregator does.
+    </p>
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <button id="tourBtn" class="w-full sm:w-auto grad-btn text-ink font-bold px-6 py-3 rounded-xl hover:opacity-90 transition ring-soft">
+        ▶ Play the 20-second guided tour
+      </button>
+      <span class="text-sm text-slate-500">…or just start typing below</span>
+    </div>
+  </section>
+
+  <!-- ══ DEMO APP ══════════════════════════════════════════════════════════ -->
+  <section class="max-w-6xl mx-auto px-4 sm:px-5 py-8 md:py-10">
+    <div class="grid lg:grid-cols-[1fr_320px] gap-4 md:gap-5">
+
+      <!-- ─ Chat column ─ -->
+      <div class="card rounded-3xl overflow-hidden ring-soft flex flex-col min-h-[560px]">
+        <!-- Model picker -->
+        <div class="border-b border-white/8 p-3 sm:p-4">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-[11px] uppercase tracking-widest text-slate-500">Model</span>
+            <span class="text-[11px] text-slate-500">Switch anytime — memory stays</span>
+          </div>
+          <div id="modelPicker" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Transcript -->
+        <div id="chat" class="chat-scroll flex-1 overflow-y-auto p-4 sm:p-5 space-y-4" style="max-height:52vh"></div>
+
+        <!-- Suggested prompts -->
+        <div id="suggests" class="px-4 sm:px-5 pb-2 flex flex-wrap gap-2"></div>
+
+        <!-- Input -->
+        <form id="composer" class="border-t border-white/8 p-3 sm:p-4 flex items-end gap-2">
+          <textarea id="input" rows="1" placeholder="Message Gate…  (try: my name is Sara and I'm building an app called Cruxly)"
+            class="flex-1 resize-none max-h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/12 text-white placeholder-slate-500 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition text-sm"></textarea>
+          <button type="submit" id="sendBtn" class="grad-btn text-ink font-bold px-4 sm:px-5 py-3 rounded-xl hover:opacity-90 transition whitespace-nowrap">Send</button>
+        </form>
+      </div>
+
+      <!-- ─ Memory column ─ -->
+      <aside class="card rounded-3xl p-5 flex flex-col">
+        <div class="flex items-center gap-2">
+          <span class="w-9 h-9 grid place-items-center rounded-xl grad-btn text-ink text-lg">🧠</span>
+          <div>
+            <h2 class="font-display font-bold text-white leading-tight">Shared memory</h2>
+            <p class="text-[11px] text-slate-500">Private · yours · every model reads it</p>
+          </div>
+        </div>
+        <p id="memEmpty" class="mt-4 text-sm text-slate-400">
+          Empty for now. Tell any model a fact about you or your project — it appears here and
+          <span class="text-white">every other model instantly knows it too.</span>
+        </p>
+        <ul id="memList" class="mt-4 space-y-2"></ul>
+        <div class="mt-auto pt-5">
+          <div class="text-[11px] text-slate-500 border-t border-white/8 pt-4">
+            In the real product this lives on Gate's gateway (powered by jamgate), quality-gated and
+            deletable by you at any time. Here it's just in your browser — refresh to reset.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- CTA under the demo -->
+    <div class="mt-8 rounded-3xl p-6 md:p-8 text-center ring-soft" style="background:linear-gradient(120deg,rgba(124,92,255,.18),rgba(34,211,238,.12))">
+      <h3 class="font-display font-extrabold text-2xl md:text-3xl text-white">Liked the memory trick?</h3>
+      <p class="mt-2 text-slate-200">That's the whole point of Gate. Lock the founding price before launch.</p>
+      <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a data-stripe href="index.html#pricing" class="w-full sm:w-auto grad-btn text-ink font-bold px-7 py-3 rounded-xl hover:opacity-90 transition ring-soft">Pre-order early access →</a>
+        <a href="index.html#waitlist" class="w-full sm:w-auto text-white font-semibold px-7 py-3 rounded-xl border border-white/20 hover:bg-white/10 transition">Join the waitlist</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-white/8">
+    <div class="max-w-6xl mx-auto px-5 py-8 text-center text-xs text-slate-500">
+      This is a scripted demonstration. Responses are illustrative, not generated by the named models.
+      © <span id="year"></span> Gate · <a href="index.html" class="hover:text-white">gate.jamgate.dev</a>
+    </div>
+  </footer>
+
+  <script>
+  /* ══════════════════════════════════════════════════════════════════════
+     CONFIG shared with index.html (kept in sync manually).
+     STRIPE link is applied only so the in-demo Pre-order buttons work; if you
+     rotate it, update index.html too.
+     ══════════════════════════════════════════════════════════════════════ */
+  const CONFIG = { STRIPE_PAYMENT_LINK: "https://buy.stripe.com/eVq28rbhG9kt9il186dfG03" };
+
+  /* ── Models ─────────────────────────────────────────────────────────── */
+  const MODELS = {
+    gpt:      { name:'GPT',      vendor:'OpenAI',    dot:'#10a37f', mono:'◍' },
+    claude:   { name:'Claude',   vendor:'Anthropic', dot:'#d97757', mono:'✳' },
+    gemini:   { name:'Gemini',   vendor:'Google',    dot:'#4285f4', mono:'✦' },
+    deepseek: { name:'DeepSeek', vendor:'DeepSeek',  dot:'#4d6bfe', mono:'🐋' },
+  };
+  const ORDER = ['gpt','claude','gemini','deepseek'];
+  let current = 'gpt';
+
+  /* ── In-page shared memory (NO storage APIs) ────────────────────────── */
+  const memory = {};            // key -> { key, label, value, source }
+  const $ = (id) => document.getElementById(id);
+  const chat = $('chat');
+
+  /* ── Model picker UI ────────────────────────────────────────────────── */
+  function renderPicker(){
+    $('modelPicker').innerHTML = ORDER.map(k=>{
+      const m = MODELS[k], on = k===current;
+      return `<button data-model="${k}"
+        class="group inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-semibold transition
+        ${on ? 'border-accent/60 bg-accent/10 text-white' : 'border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-white/25'}">
+        <span class="w-2.5 h-2.5 rounded-full" style="background:${m.dot}"></span>
+        ${m.name}
+        <span class="hidden sm:inline text-[10px] font-normal text-slate-500">${m.vendor}</span>
+      </button>`;
+    }).join('');
+    $('modelPicker').querySelectorAll('[data-model]').forEach(b=>{
+      b.addEventListener('click', ()=> switchModel(b.dataset.model, true));
+    });
+  }
+  function switchModel(k, announce){
+    if(k===current) return;
+    const from = current; current = k; renderPicker();
+    if(announce){
+      addSystem(`Switched to <b>${MODELS[k].name}</b> — same conversation, same memory.`);
+    }
+    return from;
+  }
+
+  /* ── Rendering helpers ──────────────────────────────────────────────── */
+  function scroll(){ chat.scrollTop = chat.scrollHeight; }
+  function addSystem(html){
+    const el = document.createElement('div');
+    el.className = 'text-center animate-fadeup';
+    el.innerHTML = `<span class="inline-block text-[11px] text-slate-400 bg-white/5 border border-white/10 rounded-full px-3 py-1">${html}</span>`;
+    chat.appendChild(el); scroll();
+  }
+  function addUser(text){
+    const el = document.createElement('div');
+    el.className = 'flex justify-end animate-fadeup';
+    el.innerHTML = `<div class="max-w-[80%] bg-accent/15 border border-accent/30 text-white rounded-2xl rounded-br-md px-4 py-2.5 text-sm leading-relaxed">${esc(text)}</div>`;
+    chat.appendChild(el); scroll();
+  }
+  function addTyping(k){
+    const m = MODELS[k];
+    const el = document.createElement('div');
+    el.className = 'flex items-start gap-2.5';
+    el.innerHTML = `
+      <span class="mt-0.5 w-7 h-7 shrink-0 grid place-items-center rounded-lg text-sm" style="background:${m.dot}22;color:${m.dot};border:1px solid ${m.dot}55">${m.mono}</span>
+      <div class="rounded-2xl rounded-tl-md bg-white/5 border border-white/10 px-4 py-3"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
+    chat.appendChild(el); scroll();
+    return el;
+  }
+  function addModel(k, html, recalled){
+    const m = MODELS[k];
+    const el = document.createElement('div');
+    el.className = 'flex items-start gap-2.5 animate-pop';
+    el.innerHTML = `
+      <span class="mt-0.5 w-7 h-7 shrink-0 grid place-items-center rounded-lg text-sm" style="background:${m.dot}22;color:${m.dot};border:1px solid ${m.dot}55">${m.mono}</span>
+      <div class="max-w-[85%]">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-semibold text-slate-300">${m.name}</span>
+          ${recalled ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-accent2 bg-accent2/10 border border-accent2/30 rounded-full px-2 py-0.5">🧠 recalled from shared memory</span>` : ``}
+        </div>
+        <div class="rounded-2xl rounded-tl-md bg-white/5 border border-white/10 px-4 py-2.5 text-sm leading-relaxed text-slate-100">${html}</div>
+      </div>`;
+    chat.appendChild(el); scroll();
+  }
+  function esc(s){ return s.replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  /* ── Memory panel ───────────────────────────────────────────────────── */
+  function saveFact(f){
+    const isNew = !memory[f.key];
+    memory[f.key] = f;
+    renderMemory(isNew ? f.key : null);
+  }
+  function renderMemory(flashKey){
+    const keys = Object.keys(memory);
+    $('memEmpty').style.display = keys.length ? 'none' : 'block';
+    $('memList').innerHTML = keys.map(k=>{
+      const f = memory[k], m = MODELS[f.source];
+      return `<li data-k="${k}" class="rounded-xl bg-white/5 border border-white/10 px-3 py-2 ${k===flashKey?'mem-new':''}">
+        <div class="text-[11px] uppercase tracking-wider text-slate-500">${f.label}</div>
+        <div class="text-sm text-white">${esc(f.value)}</div>
+        <div class="mt-0.5 text-[10px] text-slate-500 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full" style="background:${m.dot}"></span> learned via ${m.name}
+        </div>
+      </li>`;
+    }).join('');
+  }
+
+  /* ── Scripted "intelligence": extract facts + recall them ───────────── */
+  // Returns EVERY fact found in a message — one sentence often carries several
+  // ("I'm Sara and I'm building Cruxly in TypeScript" → name + project + stack).
+  function extractFacts(t){
+    const s = t.trim();
+    const out = []; let x;
+    // Strong prefixes ("my name is", "call me") accept any case; the weak "I'm"
+    // prefix requires a capitalised word so "I'm building…" isn't read as a name.
+    if ((x = s.match(/\b(?:my name is|call me)\s+([\w-]{2,20})\b/i)) ||
+        ((x = s.match(/\b(?:[Ii] am|[Ii]'?m)\s+([A-Z][\w-]{1,20})\b/)) &&
+         !/^(building|working|making|from|based|allergic|going|trying|looking|the|a|an)$/i.test(x[1])))
+      out.push({ key:'name', label:'Name', value:cap(x[1]) });
+    if ((x = s.match(/\b(?:app|project|startup|tool|product|company)\s+(?:called|named)\s+([^.,;!?\n]{2,40})/i)) ||
+        (x = s.match(/\b(?:building|making|working on)\s+(?:an?\s+)?([^.,;!?\n]{2,60})/i)))
+      out.push({ key:'project', label:'Project', value:clean(x[1]) });
+    if ((x = s.match(/\b(?:i (?:code|write|program) in|i use|sdk (?:in|should be in)|prefer(?:ring)?)\s+([A-Za-z0-9+#.\- ]{2,30})/i)))
+      out.push({ key:'stack', label:'Prefers', value:clean(x[1]) });
+    if ((x = s.match(/\bi live in\s+([^.,;!?\n]{2,40})/i)) || (x = s.match(/\bi'?m (?:from|based in)\s+([^.,;!?\n]{2,40})/i)))
+      out.push({ key:'location', label:'Location', value:clean(x[1]) });
+    if (/allergic/i.test(s) && (x = s.match(/\bi'?m allergic to\s+([^.,;!?\n]{2,40})/i)))
+      out.push({ key:'allergy', label:'Allergic to', value:clean(x[1]) });
+    return out;
+  }
+  // A single question can ask about several things at once.
+  function detectQuestions(t){
+    const s = t.toLowerCase(); const keys = [];
+    if (/\b(my name|who am i|remember me)\b/.test(s)) keys.push('name');
+    if (/\b(project|building|app|working on|startup)\b/.test(s) && /\b(what|which|remind|again|call|name)\b/.test(s)) keys.push('project');
+    if (/\b(language|stack|sdk|code in|prefer|framework)\b/.test(s)) keys.push('stack');
+    if (/\b(where do i live|where i live|where am i|located|which city)\b/.test(s)) keys.push('location');
+    if (/\b(allergic|allergy)\b/.test(s)) keys.push('allergy');
+    return keys;
+  }
+  const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+  const clean = s => s.trim().replace(/\s+/g,' ').replace(/[."'\s]+$/,'').replace(/^(?:a|an|the)\s+/i,'');
+
+  /* ── Response composition (persona-flavoured, canned) ───────────────── */
+  const OPENERS = {
+    gpt:['Got it.','Sure thing.','Noted.'],
+    claude:['Happy to help.','Of course.','Absolutely.'],
+    gemini:['Done.','Here you go.','On it.'],
+    deepseek:['Understood.','Acknowledged.','Noted.'],
+  };
+  function pick(a,i){ return a[i % a.length]; }
+  let turn = 0;
+
+  function reply(model, text){
+    turn++;
+    // 1) new fact(s)?
+    const facts = extractFacts(text);
+    if (facts.length){
+      const lines = facts.map(f=>{
+        f.source = model; saveFact(f);
+        return {
+          name:`your name is <b>${esc(f.value)}</b>`,
+          project:`you're working on <b>${esc(f.value)}</b>`,
+          stack:`you prefer <b>${esc(f.value)}</b>`,
+          location:`you're in <b>${esc(f.value)}</b>`,
+          allergy:`you're allergic to <b>${esc(f.value)}</b>`,
+        }[f.key];
+      });
+      const joined = lines.length===1 ? lines[0] : lines.slice(0,-1).join(', ') + ' and ' + lines.slice(-1);
+      return { html:`${pick(OPENERS[model],turn)} I'll remember that ${joined}. ${facts.length>1?'These are':'This is'} now in your <b>shared memory</b>, so every model here — not just ${MODELS[model].name} — will know. Try switching models and asking me about it.`, recalled:false };
+    }
+    // 2) recall?
+    const keys = detectQuestions(text);
+    if (keys.length){
+      const known = keys.filter(k=>memory[k]);
+      if (known.length){
+        const parts = known.map(k=>{
+          const f = memory[k], val = `<b>${esc(f.value)}</b>`;
+          return {
+            name:`your name is ${val}`,
+            project:`you're building ${val}`,
+            stack:`you prefer ${val}`,
+            location:`you're in ${val}`,
+            allergy:`you're allergic to ${val}`,
+          }[k];
+        });
+        const body = cap(parts.length===1 ? parts[0] : parts.slice(0,-1).join(', ') + ' and ' + parts.slice(-1)) + '.';
+        const sources = [...new Set(known.map(k=>memory[k].source).filter(s=>s && s!==model))];
+        const tag = sources.length
+          ? ` You told that to <b>${sources.map(s=>MODELS[s].name).join('</b> and <b>')}</b>, not me — but with Gate it's one shared memory, so I've got it too. ✨`
+          : ` (Straight from your shared memory.)`;
+        const missing = keys.filter(k=>!memory[k]);
+        const miss = missing.length ? ` I don't have ${missing.join(' or ')} in memory yet, though.` : '';
+        return { html: body + tag + miss, recalled:true };
+      }
+      return { html:`I don't have that in memory yet. Tell me and it'll stick — then <b>any</b> model you switch to will know it too.`, recalled:false };
+    }
+    // 3) generic, model-flavoured
+    const known = Object.keys(memory).length;
+    const flavour = {
+      gpt:`Here's a clear take: ${esc(shorten(text))}. Want me to go deeper, or compare answers with Claude, Gemini or DeepSeek in this same thread?`,
+      claude:`Let me think it through. On "${esc(shorten(text))}", the thoughtful answer depends on your goal — happy to reason step by step.`,
+      gemini:`Quick structured view on "${esc(shorten(text))}": 1) what matters, 2) the trade-offs, 3) a recommendation. Want the full breakdown?`,
+      deepseek:`From a technical angle on "${esc(shorten(text))}": I'd start from first principles and optimise from there.`,
+    }[model];
+    const memNote = known ? ` <span class="text-slate-400">(I still remember the ${known} thing${known>1?'s':''} in your shared memory.)</span>` : ` <span class="text-slate-400">Tip: tell me a fact about you and switch models to see the memory carry over.</span>`;
+    return { html: flavour + memNote, recalled:false };
+  }
+  function shorten(s){ s=s.trim(); return s.length>60 ? s.slice(0,57)+'…' : s; }
+
+  /* ── Send flow ──────────────────────────────────────────────────────── */
+  let busy = false;
+  async function send(text, model){
+    text = (text||'').trim(); if(!text||busy) return;
+    model = model || current;
+    busy = true; $('sendBtn').disabled = true; $('sendBtn').classList.add('opacity-50');
+    addUser(text);
+    const typing = addTyping(model);
+    await wait(650 + Math.random()*500);
+    typing.remove();
+    const r = reply(model, text);
+    addModel(model, r.html, r.recalled);
+    busy = false; $('sendBtn').disabled = false; $('sendBtn').classList.remove('opacity-50');
+  }
+  const wait = ms => new Promise(r=>setTimeout(r,ms));
+
+  /* ── Suggested prompts ──────────────────────────────────────────────── */
+  const SUGGESTS = [
+    "My name is Sara and I'm building an app called Cruxly",
+    "What's my name?",
+    "What project am I working on?",
+    "I code in TypeScript",
+  ];
+  function renderSuggests(){
+    $('suggests').innerHTML = SUGGESTS.map((s,i)=>
+      `<button data-s="${i}" class="text-xs text-slate-300 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 hover:text-white hover:border-white/25 transition">${esc(s)}</button>`
+    ).join('');
+    $('suggests').querySelectorAll('[data-s]').forEach(b=>{
+      b.addEventListener('click', ()=> send(SUGGESTS[b.dataset.s]));
+    });
+  }
+
+  /* ── Guided tour (auto-play the moat moment) ────────────────────────── */
+  async function guidedTour(){
+    if(busy) return;
+    $('tourBtn').disabled = true; $('tourBtn').classList.add('opacity-50');
+    chat.innerHTML=''; for(const k in memory) delete memory[k]; renderMemory();
+    switchModel('gpt'); renderPicker();
+    addSystem('Guided tour — watch the memory follow you across models.');
+    await wait(700);
+    await typeInto("I'm Sara, and I'm building a rock-climbing app called Cruxly. I code in TypeScript.");
+    await send($('input').value.trim(), 'gpt'); $('input').value=''; autosize();
+    await wait(900);
+    switchModel('claude', true); await wait(700);
+    await typeInto("Quick — remind me what my app is called and what language my SDK should be in?");
+    await send($('input').value.trim(), 'claude'); $('input').value=''; autosize();
+    await wait(900);
+    switchModel('gemini', true); await wait(700);
+    await typeInto("And what's my name again?");
+    await send($('input').value.trim(), 'gemini'); $('input').value=''; autosize();
+    await wait(500);
+    addSystem('✨ Three different models. One memory. That\'s Gate.');
+    $('tourBtn').disabled = false; $('tourBtn').classList.remove('opacity-50');
+  }
+  async function typeInto(text){
+    const el = $('input'); el.value='';
+    for(let i=0;i<text.length;i++){ el.value += text[i]; autosize(); await wait(14); }
+    await wait(250);
+  }
+
+  /* ── Composer wiring ────────────────────────────────────────────────── */
+  const input = $('input');
+  function autosize(){ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,128)+'px'; }
+  input.addEventListener('input', autosize);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('composer').requestSubmit(); } });
+  $('composer').addEventListener('submit', e=>{ e.preventDefault(); const t=input.value.trim(); if(!t)return; input.value=''; autosize(); send(t); });
+  $('tourBtn').addEventListener('click', guidedTour);
+
+  /* ── Wire pre-order buttons to Stripe ───────────────────────────────── */
+  document.querySelectorAll('[data-stripe]').forEach(a=>{
+    if(CONFIG.STRIPE_PAYMENT_LINK){ a.href = CONFIG.STRIPE_PAYMENT_LINK; a.setAttribute('rel','noopener'); }
+  });
+
+  /* ── Boot ───────────────────────────────────────────────────────────── */
+  $('year').textContent = new Date().getFullYear();
+  renderPicker(); renderMemory(); renderSuggests();
+  addModel('gpt', `Hi! I'm <b>GPT</b>, one of the models inside Gate. Tell me something about you or your project, then switch to <b>Claude</b>, <b>Gemini</b> or <b>DeepSeek</b> above — they'll all remember it. Or hit <b>▶ Play the guided tour</b>.`, false);
+  </script>
+</body>
+</html>

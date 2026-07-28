@@ -16,8 +16,9 @@
 <body class="text-slate-300 antialiased" style="font-family:Inter,system-ui,sans-serif">
   <div class="max-w-2xl mx-auto px-5 py-16">
     <a href="index.html" class="text-sm text-slate-400 hover:text-white">← Back to <span data-brand>Gate</span></a>
+    <span class="text-slate-600 text-sm px-2">·</span><a href="demo.html" class="text-sm text-slate-400 hover:text-white">Live demo</a>
     <h1 class="mt-6 font-bold text-4xl text-white" style="font-family:Sora,sans-serif">Privacy <span class="grad">Policy</span></h1>
-    <p class="mt-2 text-sm text-slate-500">Last updated: <span id="date"></span></p>
+    <p class="mt-2 text-sm text-slate-500">Last updated: <time datetime="2026-07-28">28 July 2026</time></p>
 
     <div class="mt-8 space-y-6 leading-relaxed">
       <p>This policy explains what <span data-brand>Gate</span> ("we", "us") collects and how we use it. We built this product around a simple principle: <strong class="text-white">your memory and your conversations belong to you.</strong></p>
@@ -37,7 +38,7 @@
       <h2 class="text-white font-semibold text-xl pt-2" style="font-family:Sora,sans-serif">Contact</h2>
       <p>Questions or data requests: <a data-contact href="#" class="grad font-semibold">email us</a>.</p>
 
-      <p class="text-sm text-slate-500 pt-4">This is a starting template, not legal advice. Have it reviewed before relying on it for real transactions.</p>
+      <!-- NOTE for jam: have a lawyer review this before scaling paid traffic. -->
     </div>
   </div>
   <script>
@@ -47,7 +48,6 @@
     document.title = "Privacy Policy — " + CONFIG.BRAND;
     const email = CONFIG.CONTACT_EMAIL || ("hello@" + CONFIG.DOMAIN);
     document.querySelectorAll('[data-contact]').forEach(a => a.href = "mailto:" + email);
-    document.getElementById('date').textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   </script>
 </body>
 </html>
